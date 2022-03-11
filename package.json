@@ -1,6 +1,6 @@
 {
   "name": "postgres-dev",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "A simple local postgres instance for development within docker.",
   "main": "dist/index.js",
   "repository": "https://github.com/max-ringel/postgres-dev.git",

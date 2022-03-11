@@ -45,8 +45,16 @@ export class PostgresDev {
 
       await this.startDB(containerName);
 
-      process.on("beforeExit", (_) => {
-        PostgresDev.stopPostgresDev(containerName);
+      process.on("beforeExit", async (_) => {
+        console.log(containerName + ": cleaning up");
+        await PostgresDev.stopPostgresDev(containerName);
+        process.exit();
+      });
+
+      process.on("SIGINT", async (_) => {
+        console.log(containerName + ": cleaning up");
+        await PostgresDev.stopPostgresDev(containerName);
+        process.exit();
       });
 
       // waiting for db service to be available in container:

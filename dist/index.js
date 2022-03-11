@@ -62,6 +62,7 @@ var PostgresDev = /** @class */ (function () {
     PostgresDev.startPostgresDev = function (user, password, db, containerName, port, initFile) {
         return __awaiter(this, void 0, void 0, function () {
             var err_1;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.checkIfContainerExists(containerName)];
@@ -86,13 +87,39 @@ var PostgresDev = /** @class */ (function () {
                     case 5: return [4 /*yield*/, this.startDB(containerName)];
                     case 6:
                         _a.sent();
-                        process_1.default.on("beforeExit", function (_) {
-                            PostgresDev.stopPostgresDev(containerName);
-                        });
+                        process_1.default.on("beforeExit", function (_) { return __awaiter(_this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        console.log(containerName + ": cleaning up");
+                                        return [4 /*yield*/, PostgresDev.stopPostgresDev(containerName)];
+                                    case 1:
+                                        _a.sent();
+                                        process_1.default.exit();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        process_1.default.on("SIGINT", function (_) { return __awaiter(_this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        console.log(containerName + ": cleaning up");
+                                        return [4 /*yield*/, PostgresDev.stopPostgresDev(containerName)];
+                                    case 1:
+                                        _a.sent();
+                                        process_1.default.exit();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); });
                         // waiting for db service to be available in container:
-                        return [4 /*yield*/, setTimeout(function () {
-                                console.log(containerName + ": Database is available on port " + port + "...");
-                            }, 5000)];
+                        return [4 /*yield*/, new Promise(function (resolve) {
+                                setTimeout(function () {
+                                    console.log(containerName + ": Database is available on port " + port + "...");
+                                    resolve(true);
+                                }, 5000);
+                            })];
                     case 7:
                         // waiting for db service to be available in container:
                         _a.sent();
