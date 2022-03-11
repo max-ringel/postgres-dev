@@ -57,7 +57,7 @@ export class PostgresDev {
       }, 5000);
     } catch (err) {
       await this.stopPostgresDev(containerName);
-      this.clear();
+      this.clear(containerName);
       throw err;
     }
 
