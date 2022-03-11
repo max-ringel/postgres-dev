@@ -125,7 +125,7 @@ var PostgresDev = /** @class */ (function () {
                             return [2 /*return*/, false];
                         }
                         return [2 /*return*/, new Promise(function (resolve, reject) {
-                                var childProcess = child_process_1.spawn("docker", [
+                                var childProcess = (0, child_process_1.spawn)("docker", [
                                     "stop",
                                     containerName !== null && containerName !== void 0 ? containerName : _this.containerName,
                                 ]);
@@ -151,7 +151,7 @@ var PostgresDev = /** @class */ (function () {
                 if (this.containerName == undefined && containerName == undefined)
                     return [2 /*return*/];
                 return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var childProcess = child_process_1.spawn("docker", [
+                        var childProcess = (0, child_process_1.spawn)("docker", [
                             "rm",
                             containerName !== null && containerName !== void 0 ? containerName : _this.containerName,
                         ]);
@@ -170,7 +170,7 @@ var PostgresDev = /** @class */ (function () {
     };
     PostgresDev.checkIfContainerExists = function (containerName) {
         return new Promise(function (resolve, reject) {
-            var childProcess = child_process_1.spawn("docker", ["ps", "-a"]);
+            var childProcess = (0, child_process_1.spawn)("docker", ["ps", "-a"]);
             childProcess.stdout.setEncoding("utf-8");
             childProcess.stdout.on("data", function (output) {
                 resolve(output.includes(containerName));
@@ -189,19 +189,19 @@ var PostgresDev = /** @class */ (function () {
     };
     PostgresDev.createDB = function (user, password, db, containerName, port) {
         return new Promise(function (resolve, reject) {
-            var childProcess = child_process_1.spawn("docker", [
+            var childProcess = (0, child_process_1.spawn)("docker", [
                 "create",
                 "--publish",
-                port + ":5432",
+                "".concat(port, ":5432"),
                 "--rm",
                 "--name",
                 containerName,
                 "-e",
-                "POSTGRES_PASSWORD=" + password,
+                "POSTGRES_PASSWORD=".concat(password),
                 "-e",
-                "POSTGRES_USER=" + user,
+                "POSTGRES_USER=".concat(user),
                 "-e",
-                "POSTGRES_DB=" + db,
+                "POSTGRES_DB=".concat(db),
                 "postgres",
             ]);
             childProcess.on("exit", function (code) {
@@ -217,10 +217,10 @@ var PostgresDev = /** @class */ (function () {
     };
     PostgresDev.copyDBInitFile = function (containerName, initFile) {
         return new Promise(function (resolve, reject) {
-            var childProcess = child_process_1.spawn("docker", [
+            var childProcess = (0, child_process_1.spawn)("docker", [
                 "cp",
                 initFile,
-                containerName + ":/docker-entrypoint-initdb.d",
+                "".concat(containerName, ":/docker-entrypoint-initdb.d"),
             ]);
             childProcess.on("exit", function (code) {
                 if (code == 0) {
@@ -235,7 +235,7 @@ var PostgresDev = /** @class */ (function () {
     };
     PostgresDev.startDB = function (containerName) {
         return new Promise(function (resolve, reject) {
-            var childProcess = child_process_1.spawn("docker", ["start", containerName]);
+            var childProcess = (0, child_process_1.spawn)("docker", ["start", containerName]);
             childProcess.on("exit", function (code) {
                 if (code == 0) {
                     resolve(code);

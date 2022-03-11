@@ -50,11 +50,14 @@ export class PostgresDev {
       });
 
       // waiting for db service to be available in container:
-      await setTimeout(() => {
-        console.log(
-          containerName + ": Database is available on port " + port + "..."
-        );
-      }, 5000);
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          console.log(
+            containerName + ": Database is available on port " + port + "..."
+          );
+          resolve(true);
+        }, 5000);
+      });
     } catch (err) {
       await this.stopPostgresDev(containerName);
       this.clear(containerName);
