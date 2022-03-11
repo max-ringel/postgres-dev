@@ -68,7 +68,7 @@ var PostgresDev = /** @class */ (function () {
                         this.containerName = containerName;
                         _a.label = 2;
                     case 2:
-                        _a.trys.push([2, 7, , 8]);
+                        _a.trys.push([2, 8, , 10]);
                         return [4 /*yield*/, this.createDB(user, password, db, containerName, port)];
                     case 3:
                         _a.sent();
@@ -82,13 +82,22 @@ var PostgresDev = /** @class */ (function () {
                     case 5: return [4 /*yield*/, this.startDB(containerName)];
                     case 6:
                         _a.sent();
-                        console.log(containerName + ": Database is available on port " + port + "...");
-                        return [3 /*break*/, 8];
+                        // waiting for db service to be available in container:
+                        return [4 /*yield*/, setTimeout(function () {
+                                console.log(containerName + ": Database is available on port " + port + "...");
+                            }, 5000)];
                     case 7:
+                        // waiting for db service to be available in container:
+                        _a.sent();
+                        return [3 /*break*/, 10];
+                    case 8:
                         err_1 = _a.sent();
+                        return [4 /*yield*/, this.stopPostgresDev()];
+                    case 9:
+                        _a.sent();
                         this.clear();
                         throw err_1;
-                    case 8: return [2 /*return*/, true];
+                    case 10: return [2 /*return*/, true];
                 }
             });
         });

@@ -43,10 +43,15 @@ export class PostgresDev {
       }
 
       await this.startDB(containerName);
-      console.log(
-        containerName + ": Database is available on port " + port + "..."
-      );
+
+      // waiting for db service to be available in container:
+      await setTimeout(() => {
+        console.log(
+          containerName + ": Database is available on port " + port + "..."
+        );
+      }, 5000);
     } catch (err) {
+      await this.stopPostgresDev();
       this.clear();
       throw err;
     }
