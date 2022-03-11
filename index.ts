@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import process from "process";
 
 export class PostgresDev {
   private static containerName: string;
@@ -43,6 +44,11 @@ export class PostgresDev {
       }
 
       await this.startDB(containerName);
+
+      process.on("beforeExit", (_) => {
+        PostgresDev.stopPostgresDev(containerName);
+      });
+
       console.log(
         containerName + ": Database is available on port " + port + "..."
       );
@@ -55,13 +61,24 @@ export class PostgresDev {
   }
 
   /**
-   * Stops the last started container (and removes it).
-   * It throws an error when the container doesn't exist.
+   * Stops the last (if not specified otherwise) started container (and removes it).
+   * @param {string} containerName optionally pass a containerName to stop.
    * @returns {Promise<boolean>} true on success; false when something went wrong.
    */
-  public static stopPostgresDev(): Promise<boolean> {
+  public static async stopPostgresDev(
+    containerName?: string
+  ): Promise<boolean> {
+    if (
+      !(await this.checkIfContainerExists(containerName ?? this.containerName))
+    ) {
+      return false;
+    }
+
     return new Promise<boolean>((resolve, reject) => {
-      const childProcess = spawn("docker", ["stop", this.containerName]);
+      const childProcess = spawn("docker", [
+        "stop",
+        containerName ?? this.containerName,
+      ]);
 
       childProcess.on("close", (code) => {
         if (code == 0) {
@@ -69,8 +86,9 @@ export class PostgresDev {
         } else {
           reject(
             new Error(
-              this.containerName +
-                ": Error while trying to stop container (maybe it doesn't exist?)"
+              containerName ??
+                this.containerName +
+                  ": Error while trying to stop container (maybe it doesn't exist?)"
             )
           );
         }
@@ -119,7 +137,8 @@ export class PostgresDev {
         } else {
           reject(
             new Error(
-              containerName + ": Error while checking for existing container"
+              containerName +
+                ": Error while checking for existing container. Is the docker daemon running?"
             )
           );
         }
