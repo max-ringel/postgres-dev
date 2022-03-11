@@ -102,11 +102,14 @@ export class PostgresDev {
     });
   }
 
-  private static async clear(): Promise<void> {
-    if (this.containerName == undefined) return;
+  private static async clear(containerName?: string): Promise<void> {
+    if (this.containerName == undefined && containerName == undefined) return;
 
     return new Promise<void>((resolve, reject) => {
-      const childProcess = spawn("docker", ["rm", this.containerName]);
+      const childProcess = spawn("docker", [
+        "rm",
+        containerName ?? this.containerName,
+      ]);
 
       childProcess.on("close", (code) => {
         if (code == 0) {
@@ -114,7 +117,8 @@ export class PostgresDev {
         } else {
           reject(
             new Error(
-              this.containerName + ": Error while trying to clear container"
+              containerName ??
+                this.containerName + ": Error while trying to clear container"
             )
           );
         }
