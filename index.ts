@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import process from "process";
 
 export class PostgresDev {
   private static containerName: string;
@@ -43,11 +44,20 @@ export class PostgresDev {
       }
 
       await this.startDB(containerName);
-      console.log(
-        containerName + ": Database is available on port " + port + "..."
-      );
+
+      process.on("beforeExit", (_) => {
+        PostgresDev.stopPostgresDev(containerName);
+      });
+
+      // waiting for db service to be available in container:
+      await setTimeout(() => {
+        console.log(
+          containerName + ": Database is available on port " + port + "..."
+        );
+      }, 5000);
     } catch (err) {
-      this.clear();
+      await this.stopPostgresDev(containerName);
+      this.clear(containerName);
       throw err;
     }
 
@@ -55,13 +65,24 @@ export class PostgresDev {
   }
 
   /**
-   * Stops the last started container (and removes it).
-   * It throws an error when the container doesn't exist.
+   * Stops the last (if not specified otherwise) started container (and removes it).
+   * @param {string} containerName optionally pass a containerName to stop.
    * @returns {Promise<boolean>} true on success; false when something went wrong.
    */
-  public static stopPostgresDev(): Promise<boolean> {
+  public static async stopPostgresDev(
+    containerName?: string
+  ): Promise<boolean> {
+    if (
+      !(await this.checkIfContainerExists(containerName ?? this.containerName))
+    ) {
+      return false;
+    }
+
     return new Promise<boolean>((resolve, reject) => {
-      const childProcess = spawn("docker", ["stop", this.containerName]);
+      const childProcess = spawn("docker", [
+        "stop",
+        containerName ?? this.containerName,
+      ]);
 
       childProcess.on("close", (code) => {
         if (code == 0) {
@@ -69,8 +90,9 @@ export class PostgresDev {
         } else {
           reject(
             new Error(
-              this.containerName +
-                ": Error while trying to stop container (maybe it doesn't exist?)"
+              containerName ??
+                this.containerName +
+                  ": Error while trying to stop container (maybe it doesn't exist?)"
             )
           );
         }
@@ -80,11 +102,14 @@ export class PostgresDev {
     });
   }
 
-  private static async clear(): Promise<void> {
-    if (this.containerName == undefined) return;
+  private static async clear(containerName?: string): Promise<void> {
+    if (this.containerName == undefined && containerName == undefined) return;
 
     return new Promise<void>((resolve, reject) => {
-      const childProcess = spawn("docker", ["rm", this.containerName]);
+      const childProcess = spawn("docker", [
+        "rm",
+        containerName ?? this.containerName,
+      ]);
 
       childProcess.on("close", (code) => {
         if (code == 0) {
@@ -92,7 +117,8 @@ export class PostgresDev {
         } else {
           reject(
             new Error(
-              this.containerName + ": Error while trying to clear container"
+              containerName ??
+                this.containerName + ": Error while trying to clear container"
             )
           );
         }
@@ -119,7 +145,8 @@ export class PostgresDev {
         } else {
           reject(
             new Error(
-              containerName + ": Error while checking for existing container"
+              containerName +
+                ": Error while checking for existing container. Is the docker daemon running?"
             )
           );
         }

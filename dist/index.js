@@ -35,9 +35,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgresDev = void 0;
 var child_process_1 = require("child_process");
+var process_1 = __importDefault(require("process"));
 var PostgresDev = /** @class */ (function () {
     function PostgresDev() {
     }
@@ -68,7 +72,7 @@ var PostgresDev = /** @class */ (function () {
                         this.containerName = containerName;
                         _a.label = 2;
                     case 2:
-                        _a.trys.push([2, 7, , 8]);
+                        _a.trys.push([2, 8, , 10]);
                         return [4 /*yield*/, this.createDB(user, password, db, containerName, port)];
                     case 3:
                         _a.sent();
@@ -82,52 +86,81 @@ var PostgresDev = /** @class */ (function () {
                     case 5: return [4 /*yield*/, this.startDB(containerName)];
                     case 6:
                         _a.sent();
-                        console.log(containerName + ": Database is available on port " + port + "...");
-                        return [3 /*break*/, 8];
+                        process_1.default.on("beforeExit", function (_) {
+                            PostgresDev.stopPostgresDev(containerName);
+                        });
+                        // waiting for db service to be available in container:
+                        return [4 /*yield*/, setTimeout(function () {
+                                console.log(containerName + ": Database is available on port " + port + "...");
+                            }, 5000)];
                     case 7:
+                        // waiting for db service to be available in container:
+                        _a.sent();
+                        return [3 /*break*/, 10];
+                    case 8:
                         err_1 = _a.sent();
-                        this.clear();
+                        return [4 /*yield*/, this.stopPostgresDev(containerName)];
+                    case 9:
+                        _a.sent();
+                        this.clear(containerName);
                         throw err_1;
-                    case 8: return [2 /*return*/, true];
+                    case 10: return [2 /*return*/, true];
                 }
             });
         });
     };
     /**
-     * Stops the last started container (and removes it).
-     * It throws an error when the container doesn't exist.
+     * Stops the last (if not specified otherwise) started container (and removes it).
+     * @param {string} containerName optionally pass a containerName to stop.
      * @returns {Promise<boolean>} true on success; false when something went wrong.
      */
-    PostgresDev.stopPostgresDev = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var childProcess = child_process_1.spawn("docker", ["stop", _this.containerName]);
-            childProcess.on("close", function (code) {
-                if (code == 0) {
-                    resolve(true);
-                }
-                else {
-                    reject(new Error(_this.containerName +
-                        ": Error while trying to stop container (maybe it doesn't exist?)"));
-                }
-            });
-            childProcess.on("error", function (err) { return reject(err); });
-        });
-    };
-    PostgresDev.clear = function () {
+    PostgresDev.stopPostgresDev = function (containerName) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                if (this.containerName == undefined)
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.checkIfContainerExists(containerName !== null && containerName !== void 0 ? containerName : this.containerName)];
+                    case 1:
+                        if (!(_a.sent())) {
+                            return [2 /*return*/, false];
+                        }
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                var childProcess = child_process_1.spawn("docker", [
+                                    "stop",
+                                    containerName !== null && containerName !== void 0 ? containerName : _this.containerName,
+                                ]);
+                                childProcess.on("close", function (code) {
+                                    if (code == 0) {
+                                        resolve(true);
+                                    }
+                                    else {
+                                        reject(new Error(containerName !== null && containerName !== void 0 ? containerName : _this.containerName +
+                                            ": Error while trying to stop container (maybe it doesn't exist?)"));
+                                    }
+                                });
+                                childProcess.on("error", function (err) { return reject(err); });
+                            })];
+                }
+            });
+        });
+    };
+    PostgresDev.clear = function (containerName) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                if (this.containerName == undefined && containerName == undefined)
                     return [2 /*return*/];
                 return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var childProcess = child_process_1.spawn("docker", ["rm", _this.containerName]);
+                        var childProcess = child_process_1.spawn("docker", [
+                            "rm",
+                            containerName !== null && containerName !== void 0 ? containerName : _this.containerName,
+                        ]);
                         childProcess.on("close", function (code) {
                             if (code == 0) {
                                 resolve();
                             }
                             else {
-                                reject(new Error(_this.containerName + ": Error while trying to clear container"));
+                                reject(new Error(containerName !== null && containerName !== void 0 ? containerName : _this.containerName + ": Error while trying to clear container"));
                             }
                         });
                         childProcess.on("error", function (err) { return reject(err); });
@@ -147,7 +180,8 @@ var PostgresDev = /** @class */ (function () {
                     resolve(true);
                 }
                 else {
-                    reject(new Error(containerName + ": Error while checking for existing container"));
+                    reject(new Error(containerName +
+                        ": Error while checking for existing container. Is the docker daemon running?"));
                 }
             });
             childProcess.on("error", function (err) { return reject(err); });
